@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    branches:
+      only:
+        master
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Install zip
+          command: 'sudo apt-get update && sudo apt-get install wget zip unzip python2.7 python-pip -y'
+      - run:
+          name: Install awscli
+          command: "sudo pip install awscli\n"
+      - run:
+          name: Zip packages
+          command: "zip -r lambda-function.zip index.js config.json\n"
+      - run:
+          name: aws lambda delete if exists
+          command: "aws lambda delete-function --function-name resetLambda\n"
+      - run:
+          name: aws lambda create-function
+          command: "aws configure list\naws lambda create-function --function-name resetLambda --zip-file fileb://lambda-function.zip --handler index.handler --runtime nodejs8.10 --role arn:aws:iam::${AWS_ACC_NUMBER}:role/csye6225LambdaExecutionRole\n"
